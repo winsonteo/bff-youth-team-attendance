@@ -215,7 +215,7 @@ function CoachManager() {
           {adding ? "Adding…" : "Add coach"}
         </button>
         {addMsg && (
-          <div className="helper" style={{ color: addMsg.startsWith("Coach "") ? "#86efac" : "#fca5a5" }}>
+          <div className="helper" style={{ color: addMsg.startsWith("Coach") ? "#86efac" : "#fca5a5" }}>
             {addMsg}
           </div>
         )}
