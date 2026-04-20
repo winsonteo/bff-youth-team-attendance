@@ -293,17 +293,23 @@ a {
     align-items: flex-start;
   }
 
+  /* Keep actions beside the name on mobile (Winson request) */
   .studentRow {
-    align-items: flex-start;
-    flex-direction: column;
+    flex-direction: row;
+    align-items: center;
+  }
+
+  .studentMeta {
+    flex: 1;
   }
 
   .studentActions {
-    width: 100%;
+    width: auto;
+    flex-shrink: 0;
   }
 
   .studentAction {
-    flex: 1;
-    min-width: 0;
+    min-width: 84px;
+    padding: 10px 12px;
   }
 }

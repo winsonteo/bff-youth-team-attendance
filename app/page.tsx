@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { LoginScreen } from "@/components/LoginScreen";
 import { ClassDashboard } from "@/components/ClassDashboard";
 import { AttendanceScreen } from "@/components/AttendanceScreen";
+import { AdminScreen } from "@/components/AdminScreen";
 import type { Id } from "@/convex/_generated/dataModel";
 
 type Coach = {
@@ -14,6 +15,12 @@ type Coach = {
 export default function HomePage() {
   const [coach, setCoach] = useState<Coach | null>(null);
   const [selectedClassId, setSelectedClassId] = useState<Id<"classes"> | null>(null);
+  const [adminMode, setAdminMode] = useState(false);
+
+  const isAdmin = useMemo(() => {
+    if (!coach) return false;
+    return coach.name.toLowerCase() === "winson";
+  }, [coach]);
 
   if (!process.env.NEXT_PUBLIC_CONVEX_URL) {
     return (
@@ -32,6 +39,10 @@ export default function HomePage() {
     return <LoginScreen onLoggedIn={setCoach} />;
   }
 
+  if (adminMode && isAdmin) {
+    return <AdminScreen onBack={() => setAdminMode(false)} />;
+  }
+
   if (selectedClassId) {
     return (
       <AttendanceScreen
@@ -42,5 +53,16 @@ export default function HomePage() {
     );
   }
 
-  return <ClassDashboard coach={coach} onSelectClass={setSelectedClassId} onLogout={() => setCoach(null)} />;
+  return (
+    <ClassDashboard
+      coach={coach}
+      onSelectClass={setSelectedClassId}
+      onLogout={() => {
+        setCoach(null);
+        setSelectedClassId(null);
+        setAdminMode(false);
+      }}
+      onAdmin={isAdmin ? () => setAdminMode(true) : undefined}
+    />
+  );
 }

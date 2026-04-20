@@ -9,10 +9,12 @@ export function ClassDashboard({
   coach,
   onSelectClass,
   onLogout,
+  onAdmin,
 }: {
   coach: { _id: Id<"coaches">; name: string };
   onSelectClass: (classId: Id<"classes">) => void;
   onLogout: () => void;
+  onAdmin?: () => void;
 }) {
   const classes = useQuery(api.classes.listClasses as never, {} as never);
 
@@ -23,7 +25,10 @@ export function ClassDashboard({
           <div className="title">Hi {coach.name}</div>
           <div className="subtitle">Choose a class and take attendance fast, with clear coach-side status.</div>
         </div>
-        <button className="btn" onClick={onLogout}>Logout</button>
+        <div className="row" style={{ justifyContent: "flex-end" }}>
+          {onAdmin ? <button className="btn" onClick={onAdmin}>Admin</button> : null}
+          <button className="btn" onClick={onLogout}>Logout</button>
+        </div>
       </div>
 
       <div className="grid grid-2">
