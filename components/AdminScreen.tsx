@@ -16,6 +16,54 @@ function isoNDaysAgo(days: number) {
   return d.toISOString().slice(0, 10);
 }
 
+function AttendanceResults({
+  studentId,
+  studentName,
+  fromDate,
+  toDate,
+}: {
+  studentId: Id<"students">;
+  studentName: string | null;
+  fromDate: string;
+  toDate: string;
+}) {
+  const attendance = useQuery(api.admin.getStudentAttendance as never, {
+    studentId,
+    fromDate,
+    toDate,
+  } as never) as any;
+
+  if (attendance === undefined) {
+    return <div className="helper">Loading…</div>;
+  }
+
+  if (!attendance?.rows?.length) {
+    return <div className="helper">No attendance records found for this range.</div>;
+  }
+
+  return (
+    <div className="stack" style={{ gap: 10 }}>
+      {attendance.rows.map((row: any, idx: number) => (
+        <div key={`${row.date}-${row.className}-${idx}`} className="studentRow">
+          <div className="studentMeta">
+            <div className="studentName">{row.date} · {row.className}</div>
+            <div className="studentStatus">Taken by {row.takenByCoachName}</div>
+          </div>
+          <div className="studentActions">
+            <span className={`badge`} style={{
+              background: row.status === "present" ? "rgba(34, 197, 94, 0.14)" : "rgba(239, 68, 68, 0.14)",
+              borderColor: row.status === "present" ? "rgba(34, 197, 94, 0.24)" : "rgba(239, 68, 68, 0.24)",
+              color: row.status === "present" ? "#bbf7d0" : "#fecaca",
+            }}>
+              {row.status.toUpperCase()}
+            </span>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export function AdminScreen({
   onBack,
 }: {
@@ -26,17 +74,6 @@ export function AdminScreen({
   const [studentId, setStudentId] = useState<string>("");
   const [fromDate, setFromDate] = useState(isoNDaysAgo(14));
   const [toDate, setToDate] = useState(isoToday());
-
-  const attendance = useQuery(
-    api.admin.getStudentAttendance as never,
-    studentId
-      ? ({
-          studentId: studentId as Id<"students">,
-          fromDate,
-          toDate,
-        } as never)
-      : undefined,
-  ) as any;
 
   const ensureCoach = useMutation(api.admin.ensureCoach as never);
   const [coachMsg, setCoachMsg] = useState<string | null>(null);
@@ -113,30 +150,13 @@ export function AdminScreen({
 
         {!studentId ? (
           <div className="helper">No student selected yet.</div>
-        ) : attendance === undefined ? (
-          <div className="helper">Loading…</div>
-        ) : attendance?.rows?.length ? (
-          <div className="stack" style={{ gap: 10 }}>
-            {attendance.rows.map((row: any, idx: number) => (
-              <div key={`${row.date}-${row.className}-${idx}`} className="studentRow">
-                <div className="studentMeta">
-                  <div className="studentName">{row.date} · {row.className}</div>
-                  <div className="studentStatus">Taken by {row.takenByCoachName}</div>
-                </div>
-                <div className="studentActions">
-                  <span className={`badge`} style={{
-                    background: row.status === "present" ? "rgba(34, 197, 94, 0.14)" : "rgba(239, 68, 68, 0.14)",
-                    borderColor: row.status === "present" ? "rgba(34, 197, 94, 0.24)" : "rgba(239, 68, 68, 0.24)",
-                    color: row.status === "present" ? "#bbf7d0" : "#fecaca",
-                  }}>
-                    {row.status.toUpperCase()}
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
         ) : (
-          <div className="helper">No attendance records found for this range.</div>
+          <AttendanceResults
+            studentId={studentId as Id<"students">}
+            studentName={selectedStudentName}
+            fromDate={fromDate}
+            toDate={toDate}
+          />
         )}
       </div>
 
