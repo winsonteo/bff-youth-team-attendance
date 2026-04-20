@@ -32,9 +32,9 @@ export function LoginScreen({ onLoggedIn }: { onLoggedIn: (coach: { _id: Id<"coa
 
   return (
     <main className="page">
-      <div className="card stack">
+      <div className="card stack heroCard">
         <div className="title">BFF Youth Attendance</div>
-        <div className="subtitle">Coach PIN login</div>
+        <div className="subtitle">Coach PIN login for quick attendance during session handoff.</div>
         <input
           className="pinInput"
           type="password"
@@ -49,7 +49,7 @@ export function LoginScreen({ onLoggedIn }: { onLoggedIn: (coach: { _id: Id<"coa
             }
           }}
         />
-        {error ? <div className="helper" style={{ color: "#b42318" }}>{error}</div> : null}
+        {error ? <div className="helper errorText">{error}</div> : null}
         <button className="btn btn-primary" disabled={pin.length !== 4 || loading} onClick={() => void submit()}>
           {loading ? "Logging in..." : "Enter"}
         </button>

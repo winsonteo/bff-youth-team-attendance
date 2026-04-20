@@ -98,7 +98,7 @@ export function AttendanceScreen({
         <div className="badge">{attendance.date}</div>
       </div>
 
-      <div className="card stack">
+      <div className="card stack heroCard">
         <div className="title">{attendance.class.name}</div>
         <div className="subtitle">Taken by {coach.name}</div>
         <div className="row">
@@ -119,19 +119,30 @@ export function AttendanceScreen({
           const status = statuses[student._id];
           return (
             <div key={student._id} className="studentRow">
-              <div className="studentName">{student.name}</div>
-              <button
-                className={`btn ${status === "present" ? "btn-selected-green" : "btn-green"}`}
-                onClick={() => setStatus(student._id, "present")}
-              >
-                Present
-              </button>
-              <button
-                className={`btn ${status === "absent" ? "btn-selected-red" : "btn-red"}`}
-                onClick={() => setStatus(student._id, "absent")}
-              >
-                Absent
-              </button>
+              <div className="studentMeta">
+                <div className="studentName">{student.name}</div>
+                <div className="studentStatus">
+                  {status === "present"
+                    ? "Marked present"
+                    : status === "absent"
+                      ? "Marked absent"
+                      : "Not marked yet"}
+                </div>
+              </div>
+              <div className="studentActions">
+                <button
+                  className={`btn studentAction ${status === "present" ? "btn-selected-green" : "btn-green"}`}
+                  onClick={() => setStatus(student._id, "present")}
+                >
+                  Present
+                </button>
+                <button
+                  className={`btn studentAction ${status === "absent" ? "btn-selected-red" : "btn-red"}`}
+                  onClick={() => setStatus(student._id, "absent")}
+                >
+                  Absent
+                </button>
+              </div>
             </div>
           );
         })}

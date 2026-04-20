@@ -21,7 +21,7 @@ export function ClassDashboard({
       <div className="row-between">
         <div>
           <div className="title">Hi {coach.name}</div>
-          <div className="subtitle">Choose a class to take attendance</div>
+          <div className="subtitle">Choose a class and take attendance fast, with clear coach-side status.</div>
         </div>
         <button className="btn" onClick={onLogout}>Logout</button>
       </div>
@@ -31,12 +31,12 @@ export function ClassDashboard({
           <button key={cls._id} className="classCard stack" onClick={() => onSelectClass(cls._id)}>
             <div className="row-between">
               <div className="studentName">{cls.name}</div>
-              <span className="badge">{cls.todaySession ? "Taken" : "Not taken"}</span>
+              <span className="badge">{cls.todaySession ? "Taken" : "Open"}</span>
             </div>
             <div className="helper">
               {cls.todaySession
                 ? `Taken by ${cls.todaySession.takenByCoachName ?? "coach"}`
-                : "Attendance not taken yet today"}
+                : "Attendance has not been taken yet today"}
             </div>
           </button>
         ))}
