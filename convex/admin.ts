@@ -21,6 +21,70 @@ export const resetAllData = mutation({
   },
 });
 
+export const listCoaches = query({
+  args: {},
+  handler: async (ctx) => {
+    const coaches = await ctx.db.query("coaches").collect();
+    return coaches.sort((a, b) => a.name.localeCompare(b.name));
+  },
+});
+
+export const addCoach = mutation({
+  args: {
+    name: v.string(),
+    pin: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const trimmedPin = args.pin.trim();
+    if (!trimmedPin) throw new Error("PIN is required");
+
+    const pinTaken = await ctx.db
+      .query("coaches")
+      .withIndex("by_pin", (q) => q.eq("pin", trimmedPin))
+      .first();
+    if (pinTaken) throw new Error(`PIN ${trimmedPin} is already in use by ${pinTaken.name}`);
+
+    const coachId = await ctx.db.insert("coaches", {
+      name: args.name.trim(),
+      pin: trimmedPin,
+      active: true,
+    });
+    return { ok: true, coachId };
+  },
+});
+
+export const updateCoach = mutation({
+  args: {
+    coachId: v.id("coaches"),
+    name: v.optional(v.string()),
+    pin: v.optional(v.string()),
+    active: v.optional(v.boolean()),
+  },
+  handler: async (ctx, args) => {
+    const { coachId, ...fields } = args;
+    const patch: Record<string, any> = {};
+
+    if (fields.name !== undefined) patch.name = fields.name.trim();
+    if (fields.active !== undefined) patch.active = fields.active;
+
+    if (fields.pin !== undefined) {
+      const trimmedPin = fields.pin.trim();
+      if (!trimmedPin) throw new Error("PIN cannot be empty");
+      const pinTaken = await ctx.db
+        .query("coaches")
+        .withIndex("by_pin", (q) => q.eq("pin", trimmedPin))
+        .first();
+      if (pinTaken && pinTaken._id !== coachId) {
+        throw new Error(`PIN ${trimmedPin} is already in use by ${pinTaken.name}`);
+      }
+      patch.pin = trimmedPin;
+    }
+
+    await ctx.db.patch(coachId, patch);
+    return { ok: true };
+  },
+});
+
 export const ensureCoach = mutation({
   args: {
     name: v.string(),
@@ -32,7 +96,7 @@ export const ensureCoach = mutation({
     const existing = await ctx.db
       .query("coaches")
       .withIndex("by_pin", (q) => q.eq("pin", args.pin))
-      .unique();
+      .first();
 
     if (existing) {
       await ctx.db.patch(existing._id, {
@@ -80,7 +144,7 @@ export const getStudentAttendance = query({
       const record = await ctx.db
         .query("attendanceRecords")
         .withIndex("by_session_student", (q) => q.eq("sessionId", session._id).eq("studentId", args.studentId))
-        .unique();
+        .first();
 
       if (!record) continue;
 

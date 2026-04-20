@@ -7,7 +7,7 @@ export const loginWithPin = mutation({
     const coach = await ctx.db
       .query("coaches")
       .withIndex("by_pin", (q) => q.eq("pin", args.pin))
-      .unique();
+      .first();
 
     if (!coach || !coach.active) {
       return { ok: false as const, error: "Invalid PIN" };
