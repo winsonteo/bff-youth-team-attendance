@@ -31,11 +31,11 @@ export function AdminScreen({
     api.admin.getStudentAttendance as never,
     studentId
       ? ({
-          studentId,
+          studentId: studentId as Id<"students">,
           fromDate,
           toDate,
         } as never)
-      : ("skip" as never),
+      : undefined,
   ) as any;
 
   const ensureCoach = useMutation(api.admin.ensureCoach as never);
@@ -52,8 +52,8 @@ export function AdminScreen({
     try {
       const result = await ensureCoach({ name: "Shi Qi", pin: "1986", active: true });
       setCoachMsg(result.action === "created" ? "Coach Shi Qi added" : "Coach Shi Qi updated");
-    } catch {
-      setCoachMsg("Could not add coach");
+    } catch (error) {
+      setCoachMsg(error instanceof Error ? error.message : "Could not add coach");
     }
   };
 
