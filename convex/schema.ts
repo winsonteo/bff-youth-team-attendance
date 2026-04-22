@@ -42,4 +42,11 @@ export default defineSchema({
   })
     .index("by_session", ["sessionId"])
     .index("by_session_student", ["sessionId", "studentId"]),
+
+  sessionGuests: defineTable({
+    sessionId: v.id("attendanceSessions"),
+    name: v.string(),
+    status: v.union(v.literal("present"), v.literal("absent")),
+  })
+    .index("by_session", ["sessionId"]),
 });

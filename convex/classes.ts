@@ -75,6 +75,13 @@ export const getClassAttendance = query({
 
     const recordMap = new Map(records.map((record) => [record.studentId, record.status]));
 
+    const sessionGuests = session
+      ? await ctx.db
+          .query("sessionGuests")
+          .withIndex("by_session", (q) => q.eq("sessionId", session._id))
+          .collect()
+      : [];
+
     return {
       class: cls,
       date,
@@ -93,6 +100,13 @@ export const getClassAttendance = query({
           name: student.name,
           status: recordMap.get(student._id) ?? null,
         })),
+      guests: sessionGuests
+        .sort((a, b) => a.name.localeCompare(b.name))
+        .map((guest) => ({
+          _id: guest._id,
+          name: guest.name,
+          status: guest.status,
+        })),
     };
   },
 });
@@ -107,6 +121,15 @@ export const saveAttendance = mutation({
         studentId: v.id("students"),
         status: v.union(v.literal("present"), v.literal("absent")),
       }),
+    ),
+    guestRecords: v.optional(
+      v.array(
+        v.object({
+          _id: v.optional(v.id("sessionGuests")),
+          name: v.string(),
+          status: v.union(v.literal("present"), v.literal("absent")),
+        }),
+      ),
     ),
   },
   handler: async (ctx, args) => {
@@ -156,6 +179,35 @@ export const saveAttendance = mutation({
           sessionId: session._id,
           studentId: record.studentId,
           status: record.status,
+        });
+      }
+    }
+
+    // Handle session guests
+    const guestRecords = args.guestRecords ?? [];
+    const existingGuests = await ctx.db
+      .query("sessionGuests")
+      .withIndex("by_session", (q) => q.eq("sessionId", session._id))
+      .collect();
+
+    const incomingGuestIds = new Set(guestRecords.map((g) => g._id).filter(Boolean));
+
+    for (const guest of existingGuests) {
+      if (!incomingGuestIds.has(guest._id)) {
+        await ctx.db.delete(guest._id);
+      }
+    }
+
+    const existingGuestMap = new Map(existingGuests.map((g) => [g._id, g]));
+
+    for (const guest of guestRecords) {
+      if (guest._id && existingGuestMap.has(guest._id)) {
+        await ctx.db.patch(guest._id, { status: guest.status, name: guest.name });
+      } else {
+        await ctx.db.insert("sessionGuests", {
+          sessionId: session._id,
+          name: guest.name,
+          status: guest.status,
         });
       }
     }
